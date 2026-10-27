@@ -1,5 +1,9 @@
 # Hue Desk
 
+[![CI](https://github.com/robertjanvlak111/huedesk/actions/workflows/ci.yml/badge.svg)](https://github.com/robertjanvlak111/huedesk/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![KDE Plasma 6](https://img.shields.io/badge/KDE%20Plasma-6-1d99f3.svg)](https://kde.org/plasma-desktop/)
+
 A Philips Hue widget that lives on your KDE Plasma desktop, styled after the
 Hue app rather than a settings dialog. Rooms are brightness bars you drag,
 scenes sit in a carousel, and everything is always visible — no tray icon, no
