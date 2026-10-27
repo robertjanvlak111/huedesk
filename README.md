@@ -19,9 +19,26 @@ ambiguous.
 It talks to your bridge directly over your own network. Nothing leaves your
 LAN, and there is no account, cloud service or telemetry.
 
-## Install
+## Requirements
 
-**You need:** KDE Plasma 6, `curl`, and — for the settings app — PySide6.
+| | |
+| --- | --- |
+| **Desktop** | KDE Plasma **6** (Wayland or X11). Not Plasma 5, GNOME or anything else. |
+| **Bridge** | A **square** Philips Hue Bridge (v2, model BSB002) on the same network, firmware 1948086000 or newer. The round first-generation bridge does not speak the v2 API and will not work. |
+| **`curl`** | Used for every bridge request. Installed by default nearly everywhere. |
+| **PySide6** | Only for the settings app. The widget itself works without it. |
+| **Pillow** | Only to run the visual tests. Not needed to use Hue Desk. |
+
+Check your Plasma version and bridge in one go:
+
+```bash
+plasmashell --version
+curl -s https://discovery.meethue.com/
+```
+
+The second command prints your bridge's address, which is handy later.
+
+## Install
 
 ```bash
 git clone https://github.com/robertjanvlak111/huedesk.git
@@ -29,12 +46,21 @@ cd huedesk
 ./install.sh
 ```
 
-The installer checks your system, copies the widget into
-`~/.local/share/plasma/plasmoids/`, installs the settings app, and restarts
-Plasma so the widget shows up. It needs no root and writes only inside your
-home directory.
+The installer checks your system first and refuses rather than half-installing
+if something is missing. It needs **no root** and writes only inside your home
+directory:
 
-If PySide6 is missing, the widget still installs; only the settings app is
+| Path | What |
+| --- | --- |
+| `~/.local/share/plasma/plasmoids/com.rvlak.huedesk/` | the widget |
+| `~/.local/share/huedesk/` | the settings app |
+| `~/.local/bin/huedesk-settings` | launcher |
+| `~/.local/share/applications/` | its menu entry |
+
+It restarts Plasma at the end so the widget appears in the widget list. Your
+open windows are not affected.
+
+If PySide6 is missing the widget still installs and only the settings app is
 skipped. To add it:
 
 | Distribution | Command |
@@ -44,14 +70,28 @@ skipped. To add it:
 | Debian, Ubuntu, KDE neon | `sudo apt install python3-pyside6` |
 | openSUSE | `sudo zypper install python3-pyside6` |
 
-### Then
+### Add it to your desktop
 
 1. Right-click your desktop → **Add Widgets…**
-2. Search for **Hue Desk** and drag it onto the desktop
-3. Press the round button on your Hue bridge, then choose **Pair** in the widget
+2. Search for **Hue** — the entry is called *Hue Desk* — and drag it onto the desktop
+3. Press the round button on top of your bridge
+4. Choose **Pair** in the widget
 
-Pairing is a one-time step. The bridge only hands out a key while that button
-is pressed, which is how it knows you are physically there.
+Pairing is a one-time step. The bridge only issues a key for about 30 seconds
+after that button is pressed, which is how it knows you are physically there.
+If you miss the window, press it and choose Pair again.
+
+> Searching `huedesk` as one word finds nothing — the widget is named
+> "Hue Desk". If it is not listed at all, Plasma has not rescanned yet:
+> `kquitapp6 plasmashell && kstart plasmashell`
+
+### Uninstall
+
+```bash
+./uninstall.sh
+```
+
+Then right-click the widget on your desktop and choose Remove.
 
 ## Settings
 
