@@ -143,6 +143,19 @@ def main() -> int:
     return 1 if (failed or visual_failed) else 0
 
 
+# Markers that mean the environment cannot render, rather than that the code
+# is broken: no GL libraries, or Plasma's QML modules are not installed.
+_CANNOT_RENDER = (
+    "libEGL", "libGL.so", "libxkbcommon",
+    "is not installed", "No such file or directory: 'org.kde",
+    'module "org.kde', "Cannot load library",
+)
+
+
+def _is_environment_limit(output: str) -> bool:
+    return any(marker in output for marker in _CANNOT_RENDER)
+
+
 def run_drag_suite(patterns) -> bool:
     """Drive a real drag across a card with synthetic mouse events."""
     if patterns and not any("drag" in p or "visual" in p for p in patterns):
@@ -156,6 +169,11 @@ def run_drag_suite(patterns) -> bool:
         if line.strip():
             print(line)
     if proc.returncode != 0:
+        combined = proc.stdout + proc.stderr
+        if _is_environment_limit(combined):
+            print("  skipped: this machine cannot render Plasma QML "
+                  "(needs a Plasma 6 desktop and GL libraries)")
+            return False
         if proc.stderr.strip():
             print("  " + proc.stderr.strip().splitlines()[-1])
         return True
@@ -194,6 +212,11 @@ def run_contrast_suite(patterns) -> bool:
              "--width", "400", "--height", "600", "--out", str(target)],
             capture_output=True, text=True)
         if proc.returncode != 0 or not target.exists():
+            combined = proc.stdout + proc.stderr
+            if _is_environment_limit(combined):
+                print("  skipped: this machine cannot render Plasma QML "
+                      "(needs a Plasma 6 desktop and GL libraries)")
+                return False
             print(f"  FAIL  {theme}: could not render ({proc.stderr.strip()[:120]})")
             failed = True
             continue

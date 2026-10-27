@@ -149,11 +149,20 @@ The pure logic lives in plain `.js` files that QML imports directly, and the
 tests run those exact files in Qt's JavaScript engine — not a reimplementation
 of them. Only PySide6 is needed.
 
-The suite also renders the widget offscreen in both themes and measures the
-contrast of every label against its own background, failing below the WCAG AA
-4.5:1 bar. Because a card's background is whatever colour the bulbs are, that
-is not something a fixed palette can guarantee. That part needs Pillow and is
-skipped without it.
+The suite also renders the widget offscreen and checks two things a
+screenshot cannot:
+
+- **Contrast** — every label is measured against its own background and must
+  clear the WCAG AA 4.5:1 bar in both themes. A card's background is whatever
+  colour the bulbs are, so no fixed palette can guarantee this.
+- **Dragging** — a real drag is driven across a card with synthetic mouse
+  events, asserting the delegate survives the gesture and the level tracks the
+  pointer. Writing to the model mid-drag destroys the card and silently turns
+  dragging back into clicking, which this catches.
+
+Both need a Plasma 6 desktop (for its QML modules) and Pillow. They skip
+themselves with a clear message anywhere else, such as a CI runner, where only
+the unit tests run.
 
 ## Troubleshooting
 
