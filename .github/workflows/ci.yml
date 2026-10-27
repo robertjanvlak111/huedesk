@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PySide6
+        run: pip install "pyside6==6.8.1"
+
+      - name: Unit tests
+        run: python3 tests/run_tests.py
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate JSON
+        run: |
+          python3 -c "
+          import json, pathlib, sys
+          bad = 0
+          for p in list(pathlib.Path('.').rglob('*.json')):
+              if '.git' in p.parts:
+                  continue
+              try:
+                  json.loads(p.read_text())
+                  print('ok', p)
+              except Exception as e:
+                  print('FAIL', p, e); bad = 1
+          sys.exit(bad)"
+
+      - name: Validate bundled SVGs
+        run: |
+          python3 -c "
+          import pathlib, sys, xml.etree.ElementTree as ET
+          bad = 0
+          for p in pathlib.Path('package/contents/icons').glob('*.svg'):
+              try:
+                  ET.parse(p); print('ok', p)
+              except Exception as e:
+                  print('FAIL', p, e); bad = 1
+          sys.exit(bad)"
+
+      - name: Shell scripts parse
+        run: bash -n install.sh && bash -n uninstall.sh
+
+      - name: Plasmoid metadata is complete
+        run: |
+          python3 -c "
+          import json, sys
+          m = json.load(open('package/metadata.json'))
+          k = m['KPlugin']
+          for field in ('Name', 'Id', 'Version', 'License', 'Icon'):
+              assert k.get(field), f'metadata.json: KPlugin.{field} is missing'
+          assert m.get('Keywords'), 'metadata.json: Keywords missing (widget search)'
+          assert m['KPackageStructure'] == 'Plasma/Applet'
+          print('metadata ok:', k['Id'], k['Version'])"
+
+      - name: No secrets committed
+        run: |
+          if git grep -nIE '\"?(hue-application-key|appKey)\"?[:=] *[\"0-9A-Za-z]{20,}' \
+               -- . ':!docs' ':!README.md'; then
+            echo "A bridge key looks committed."; exit 1
+          fi
+          echo "no keys found"
+
+  qml:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt QML tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qt6-declarative-dev-tools qml6-module-qtquick
+
+      - name: Syntax-check QML
+        run: |
+          # qmllint reports unresolved Plasma/Kirigami imports, which are not
+          # present on a bare runner; only syntax errors should fail the build.
+          status=0
+          for f in $(find package settings-app tools -name '*.qml'); do
+            out=$(qmllint "$f" 2>&1) || true
+            if echo "$out" | grep -qiE 'syntax error|Expected token|Unexpected token'; then
+              echo "$out"; status=1
+            fi
+          done
+          exit $status

@@ -1,0 +1,90 @@
+{
+  "_comment": "Synthetic CLIP v2 payloads shaped like a real bridge response. Invented ids and names; no real home is described here.",
+  "room": [
+    {
+      "id": "room-living", "type": "room",
+      "metadata": { "name": "Living room", "archetype": "living_room" },
+      "children": [
+        { "rid": "dev-ceiling", "rtype": "device" },
+        { "rid": "dev-floor", "rtype": "device" },
+        { "rid": "dev-plug", "rtype": "device" }
+      ],
+      "services": [ { "rid": "gl-living", "rtype": "grouped_light" } ]
+    },
+    {
+      "id": "room-bed", "type": "room",
+      "metadata": { "name": "Bedroom", "archetype": "bedroom" },
+      "children": [ { "rid": "dev-bedside", "rtype": "device" } ],
+      "services": [ { "rid": "gl-bed", "rtype": "grouped_light" } ]
+    },
+    {
+      "id": "room-empty", "type": "room",
+      "metadata": { "name": "Empty room", "archetype": "other" },
+      "children": [],
+      "services": [ { "rid": "gl-empty", "rtype": "grouped_light" } ]
+    },
+    {
+      "id": "room-noservice", "type": "room",
+      "metadata": { "name": "No grouped light", "archetype": "other" },
+      "children": [ { "rid": "dev-ceiling", "rtype": "device" } ],
+      "services": []
+    }
+  ],
+  "zone": [
+    {
+      "id": "zone-down", "type": "zone",
+      "metadata": { "name": "Downstairs", "archetype": "other" },
+      "children": [
+        { "rid": "light-ceiling", "rtype": "light" },
+        { "rid": "light-bedside", "rtype": "light" }
+      ],
+      "services": [ { "rid": "gl-down", "rtype": "grouped_light" } ]
+    }
+  ],
+  "grouped_light": [
+    { "id": "gl-living", "type": "grouped_light", "on": { "on": true },
+      "dimming": { "brightness": 64.0 }, "owner": { "rid": "room-living", "rtype": "room" } },
+    { "id": "gl-bed", "type": "grouped_light", "on": { "on": false },
+      "dimming": { "brightness": 20.0 }, "owner": { "rid": "room-bed", "rtype": "room" } },
+    { "id": "gl-down", "type": "grouped_light", "on": { "on": true },
+      "dimming": { "brightness": 50.0 }, "owner": { "rid": "zone-down", "rtype": "zone" } },
+    { "id": "gl-empty", "type": "grouped_light", "on": { "on": false },
+      "owner": { "rid": "room-empty", "rtype": "room" } }
+  ],
+  "light": [
+    {
+      "id": "light-ceiling", "type": "light", "owner": { "rid": "dev-ceiling", "rtype": "device" },
+      "metadata": { "name": "Ceiling", "archetype": "ceiling_round" },
+      "on": { "on": true }, "dimming": { "brightness": 80.0 },
+      "color": { "xy": { "x": 0.45, "y": 0.41 } },
+      "color_temperature": { "mirek": 366, "mirek_valid": true }
+    },
+    {
+      "id": "light-floor", "type": "light", "owner": { "rid": "dev-floor", "rtype": "device" },
+      "metadata": { "name": "Floor lamp", "archetype": "floor_shade" },
+      "on": { "on": false }, "dimming": { "brightness": 35.0 },
+      "color_temperature": { "mirek": 280, "mirek_valid": true }
+    },
+    {
+      "id": "light-plug", "type": "light", "owner": { "rid": "dev-plug", "rtype": "device" },
+      "metadata": { "name": "Socket", "archetype": "plug" },
+      "on": { "on": true }
+    },
+    {
+      "id": "light-bedside", "type": "light", "owner": { "rid": "dev-bedside", "rtype": "device" },
+      "metadata": { "name": "Bedside", "archetype": "table_shade" },
+      "on": { "on": false }, "dimming": { "brightness": 12.0 },
+      "color": { "xy": { "x": 0.6, "y": 0.33 } }
+    }
+  ],
+  "scene": [
+    { "id": "scene-relax", "type": "scene", "metadata": { "name": "Relax" },
+      "group": { "rid": "room-living", "rtype": "room" },
+      "status": { "active": "static" } },
+    { "id": "scene-focus", "type": "scene", "metadata": { "name": "Concentrate" },
+      "group": { "rid": "room-living", "rtype": "room" },
+      "status": { "active": "inactive" } },
+    { "id": "scene-night", "type": "scene", "metadata": { "name": "Nightlight" },
+      "group": { "rid": "room-bed", "rtype": "room" } }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+    "KPlugin": {
+        "Name": "Hue Desk",
+        "Description": "Control your Philips Hue lights from a widget on your desktop",
+        "Icon": "icons/bulb.svg",
+        "Id": "com.rvlak.huedesk",
+        "Version": "2.0.0",
+        "Website": "https://github.com/rvlak/huedesk",
+        "BugReportUrl": "https://github.com/rvlak/huedesk/issues",
+        "Authors": [
+            {
+                "Name": "rvlak"
+            }
+        ],
+        "Category": "Utilities",
+        "EnabledByDefault": true,
+        "License": "MIT"
+    },
+    "KPackageStructure": "Plasma/Applet",
+    "Keywords": "Hue;HueDesk;Philips;light;lights;lamp;bulb;smart home;",
+    "X-Plasma-API-Minimum-Version": "6.0"
+}

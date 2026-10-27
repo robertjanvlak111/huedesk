@@ -1,0 +1,20 @@
+# Never commit a bridge pairing key or a captured desktop.
+*.key
+key.txt
+secrets*
+hue_key.json
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+*.plasmoid
+build/
+dist/
+
+*.swp
+*~
+.DS_Store
+.idea/
+.vscode/

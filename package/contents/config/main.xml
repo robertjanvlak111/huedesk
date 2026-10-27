@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+                          http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+  <kcfgfile name=""/>
+  <group name="General">
+    <!-- Bridge -->
+    <entry name="bridgeIp" type="String">
+      <default></default>
+    </entry>
+    <entry name="appKey" type="String">
+      <default></default>
+    </entry>
+    <entry name="pollInterval" type="Int">
+      <default>10</default>
+    </entry>
+
+    <!-- Appearance -->
+    <entry name="themeMode" type="String">
+      <default>auto</default>
+    </entry>
+    <entry name="fontFamily" type="String">
+      <default></default>
+    </entry>
+    <entry name="fontScale" type="Int">
+      <default>100</default>
+    </entry>
+    <entry name="density" type="String">
+      <default>cosy</default>
+    </entry>
+    <entry name="cornerRadius" type="Int">
+      <default>14</default>
+    </entry>
+    <entry name="accentTint" type="Bool">
+      <default>true</default>
+    </entry>
+    <entry name="cardOpacity" type="Int">
+      <default>100</default>
+    </entry>
+
+    <!-- Content -->
+    <entry name="showLights" type="Bool">
+      <default>true</default>
+    </entry>
+    <entry name="showScenes" type="Bool">
+      <default>true</default>
+    </entry>
+    <entry name="showZones" type="Bool">
+      <default>true</default>
+    </entry>
+    <entry name="showHeader" type="Bool">
+      <default>true</default>
+    </entry>
+  </group>
+</kcfg>
