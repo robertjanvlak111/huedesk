@@ -53,13 +53,52 @@ QtObject {
     signal pairFailed(string message)
     signal bridgeFound(string address)
 
+    // Call log, so tests can assert what the UI asked for.
+    property var calls: []
+    function _log(name, a, b) {
+        var next = calls.slice()
+        next.push({ name: name, a: String(a), b: String(b) })
+        calls = next
+    }
+
+    // Replacing the array is what makes a Repeater rebuild its delegates, so
+    // the mock does it exactly as HueBridge does; otherwise the drag test
+    // could not reproduce a lost mouse grab.
+    function _patchGroup(groupId, bri) {
+        var next = groups.slice()
+        for (var i = 0; i < next.length; i++) {
+            if (next[i].groupId === groupId) {
+                next[i] = Object.assign({}, next[i], { bri: bri, on: true })
+            }
+        }
+        groups = next
+    }
+
+    function _patchLight(lightId, bri) {
+        var next = lights.slice()
+        for (var i = 0; i < next.length; i++) {
+            if (next[i].id === lightId) {
+                next[i] = Object.assign({}, next[i], { bri: bri, on: true })
+            }
+        }
+        lights = next
+    }
+
     function refresh() {}
     function discover() {}
     function pair() {}
-    function setGroupOn(g, on) {}
-    function setGroupBrightness(g, b, localOnly) {}
-    function setLightOn(l, on) {}
-    function setLightBrightness(l, b, localOnly) {}
+    function setGroupOn(g, on) { _log("setGroupOn", g, on) }
+    function setGroupBrightness(g, b) {
+        _log("setGroupBrightness", g, b)
+        _patchGroup(g, b)
+    }
+    function setGroupBrightnessLive(g, b) { _log("setGroupBrightnessLive", g, b) }
+    function setLightOn(l, on) { _log("setLightOn", l, on) }
+    function setLightBrightness(l, b) {
+        _log("setLightBrightness", l, b)
+        _patchLight(l, b)
+    }
+    function setLightBrightnessLive(l, b) { _log("setLightBrightnessLive", l, b) }
     function setLightColor(l, h) {}
     function setLightTemp(l, m) {}
     function recallScene(s) {}

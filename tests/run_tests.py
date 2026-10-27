@@ -137,9 +137,29 @@ def main() -> int:
                 print(f"  ok    {case['name']}")
 
     visual_failed = run_contrast_suite(patterns)
+    visual_failed = run_drag_suite(patterns) or visual_failed
 
     print(f"\n{total - failed}/{total} unit assertions passed")
     return 1 if (failed or visual_failed) else 0
+
+
+def run_drag_suite(patterns) -> bool:
+    """Drive a real drag across a card with synthetic mouse events."""
+    if patterns and not any("drag" in p or "visual" in p for p in patterns):
+        return False
+
+    print("\ndrag")
+    proc = subprocess.run(
+        [sys.executable, str(ROOT / "tests" / "visual" / "drag.py")],
+        capture_output=True, text=True)
+    for line in proc.stdout.splitlines():
+        if line.strip():
+            print(line)
+    if proc.returncode != 0:
+        if proc.stderr.strip():
+            print("  " + proc.stderr.strip().splitlines()[-1])
+        return True
+    return False
 
 
 def run_contrast_suite(patterns) -> bool:

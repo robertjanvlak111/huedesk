@@ -11,6 +11,7 @@ import org.kde.kirigami as Kirigami
 
 Item {
     id: row
+    objectName: "lightRow"
 
     property var light: null
     property var hue: null
@@ -18,7 +19,13 @@ Item {
 
     readonly property bool isOn: light ? light.on : false
     readonly property bool dimmable: light ? light.dimmable : false
-    readonly property real fraction: light ? Math.max(0, Math.min(1, light.bri / 100)) : 0
+
+    // Held locally while dragging; writing to the model would rebuild this
+    // row and drop the mouse grab. -1 means "not dragging".
+    property int dragLevel: -1
+    readonly property int level: dragLevel >= 0
+                                 ? dragLevel : (light ? light.bri : 0)
+    readonly property real fraction: Math.max(0, Math.min(1, level / 100))
 
     implicitHeight: theme.rowHeight
 
@@ -67,7 +74,8 @@ Item {
         }
 
         // Same gesture handling as RoomCard: resolve direction first so the
-        // list can still be scrolled, click to set, drag to scrub.
+        // list can still be scrolled, click to set, drag to scrub, and never
+        // write to the model while the gesture is running.
         MouseArea {
             id: slide
             anchors.fill: parent
@@ -83,10 +91,6 @@ Item {
 
             function levelAt(x) {
                 return Math.max(1, Math.min(100, Math.round((x / width) * 100)))
-            }
-
-            function send(level, localOnly) {
-                hue.setLightBrightness(row.light.id, level, localOnly)
             }
 
             onPressed: (mouse) => {
@@ -114,23 +118,27 @@ Item {
                     throttle.restart()
                 }
                 if (scrubbing) {
-                    send(levelAt(mouse.x), true)
+                    row.dragLevel = levelAt(mouse.x)
                 }
             }
 
             onReleased: (mouse) => {
                 if (scrubbing) {
                     finish()
-                } else if (!decided) {
-                    send(levelAt(mouse.x), false)
+                    return
                 }
+                var wasDecided = decided
                 decided = false
                 preventStealing = false
+                if (!wasDecided) {
+                    hue.setLightBrightness(row.light.id, levelAt(mouse.x))
+                }
             }
 
             onCanceled: {
                 if (scrubbing) {
                     finish()
+                    return
                 }
                 decided = false
                 preventStealing = false
@@ -138,9 +146,18 @@ Item {
 
             function finish() {
                 scrubbing = false
+                decided = false
+                preventStealing = false
                 throttle.stop()
                 hue.suspended = false
-                send(row.light.bri, false)
+
+                var level = row.dragLevel
+                var lightId = row.light.id
+                row.dragLevel = -1
+                if (level >= 0) {
+                    // Rebuilds this delegate, so nothing may follow it.
+                    hue.setLightBrightness(lightId, level)
+                }
             }
 
             onWheel: (wheel) => {
@@ -149,12 +166,12 @@ Item {
                     return
                 }
                 var step = wheel.angleDelta.y > 0 ? 5 : -5
-                send(Math.max(1, Math.min(100, row.light.bri + step)), false)
+                hue.setLightBrightness(row.light.id,
+                                       Math.max(1, Math.min(100, row.level + step)))
                 wheel.accepted = true
             }
 
-            // Individual lights tolerate about ten commands a second; this
-            // stays comfortably under that.
+            // Individual lights tolerate about ten commands a second.
             Timer {
                 id: throttle
                 interval: 300
@@ -164,7 +181,9 @@ Item {
                         stop()
                         return
                     }
-                    slide.send(row.light.bri, false)
+                    if (row.dragLevel >= 0) {
+                        hue.setLightBrightnessLive(row.light.id, row.dragLevel)
+                    }
                 }
             }
         }
@@ -202,7 +221,7 @@ Item {
 
             PlasmaComponents.Label {
                 visible: row.isOn && row.dimmable
-                text: light ? light.bri + "%" : ""
+                text: light ? row.level + "%" : ""
                 font: theme.captionFont
                 color: row.mutedInk
             }

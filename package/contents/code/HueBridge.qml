@@ -252,16 +252,21 @@ QtObject {
              () => _patchGroup(groupId, { on: on }))
     }
 
-    // localOnly updates just the view model, for smooth dragging; the caller
-    // issues the real command when the gesture ends.
-    function setGroupBrightness(groupId, bri, localOnly) {
+    function setGroupBrightness(groupId, bri) {
         var v = Math.max(1, Math.min(100, Math.round(bri)))
-        if (localOnly) {
-            _patchGroup(groupId, { bri: v, on: true })
-            return
-        }
         _put("grouped_light/" + groupId, { dimming: { brightness: v }, on: { on: true } },
              () => _patchGroup(groupId, { bri: v, on: true }))
+    }
+
+    // Sends without touching the view model.
+    //
+    // Patching the model replaces the `groups` array, which makes the Repeater
+    // destroy and rebuild every delegate - including the card currently under
+    // the pointer, which loses its mouse grab. During a drag the card renders
+    // its own value instead, and this pushes the level to the bridge.
+    function setGroupBrightnessLive(groupId, bri) {
+        var v = Math.max(1, Math.min(100, Math.round(bri)))
+        _put("grouped_light/" + groupId, { dimming: { brightness: v }, on: { on: true } })
     }
 
     function setLightOn(lightId, on) {
@@ -269,14 +274,16 @@ QtObject {
              () => _patchLight(lightId, { on: on }))
     }
 
-    function setLightBrightness(lightId, bri, localOnly) {
+    function setLightBrightness(lightId, bri) {
         var v = Math.max(1, Math.min(100, Math.round(bri)))
-        if (localOnly) {
-            _patchLight(lightId, { bri: v, on: true })
-            return
-        }
         _put("light/" + lightId, { dimming: { brightness: v }, on: { on: true } },
              () => _patchLight(lightId, { bri: v, on: true }))
+    }
+
+    // As setGroupBrightnessLive: no model patch, so the row keeps its grab.
+    function setLightBrightnessLive(lightId, bri) {
+        var v = Math.max(1, Math.min(100, Math.round(bri)))
+        _put("light/" + lightId, { dimming: { brightness: v }, on: { on: true } })
     }
 
     function setLightColor(lightId, hex) {

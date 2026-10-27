@@ -15,6 +15,7 @@ import org.kde.kirigami as Kirigami
 
 Item {
     id: card
+    objectName: "roomCard"
 
     property var group: null
     property var hue: null
@@ -24,12 +25,22 @@ Item {
     readonly property bool expanded: view && group ? view.isExpanded(group.id) : false
     readonly property bool isOn: group ? group.on : false
     readonly property bool dimmable: group ? group.dimmable : false
+
+    // While a drag is in progress the card renders this instead of the model
+    // value. Patching the model would replace the groups array and rebuild
+    // this very delegate, which would drop the mouse grab mid-gesture.
+    // -1 means "not dragging".
+    property int dragLevel: -1
+
+    readonly property int level: dragLevel >= 0
+                                 ? dragLevel : (group ? group.bri : 0)
+
     // A plug-only room is simply on or off, so its fill is all-or-nothing.
     readonly property real fraction: {
         if (!group) {
             return 0
         }
-        return dimmable ? Math.max(0, Math.min(1, group.bri / 100)) : 1
+        return dimmable ? Math.max(0, Math.min(1, level / 100)) : 1
     }
 
     readonly property var memberLights: {
@@ -151,9 +162,13 @@ Item {
         //
         // The card lives inside a vertically scrolling list, so the gesture
         // direction is resolved first: a horizontal drag takes the grab and
-        // dims, a vertical one is left to the list. A plain click sets the
-        // level where it lands, which is what makes hitting an exact
-        // percentage possible.
+        // dims, a vertical one is left to the list. A press that never moves
+        // is a click, and sets the level where it landed.
+        //
+        // Nothing here writes to the view model: that would rebuild this
+        // delegate and break the drag. The card shows dragLevel, the bridge
+        // is fed through the throttle, and the model is updated once on
+        // release.
         MouseArea {
             id: scrub
             anchors.fill: parent
@@ -169,10 +184,6 @@ Item {
 
             function levelAt(x) {
                 return Math.max(1, Math.min(100, Math.round((x / width) * 100)))
-            }
-
-            function send(level, localOnly) {
-                hue.setGroupBrightness(card.group.groupId, level, localOnly)
             }
 
             onPressed: (mouse) => {
@@ -201,24 +212,27 @@ Item {
                     throttle.restart()
                 }
                 if (scrubbing) {
-                    send(levelAt(mouse.x), true)
+                    card.dragLevel = levelAt(mouse.x)
                 }
             }
 
             onReleased: (mouse) => {
                 if (scrubbing) {
                     finish()
-                } else if (!decided) {
-                    // A click: set the level where it was clicked.
-                    send(levelAt(mouse.x), false)
+                    return
                 }
+                var wasDecided = decided
                 decided = false
                 preventStealing = false
+                if (!wasDecided) {
+                    hue.setGroupBrightness(card.group.groupId, levelAt(mouse.x))
+                }
             }
 
             onCanceled: {
                 if (scrubbing) {
                     finish()
+                    return
                 }
                 decided = false
                 preventStealing = false
@@ -226,9 +240,18 @@ Item {
 
             function finish() {
                 scrubbing = false
+                decided = false
+                preventStealing = false
                 throttle.stop()
                 hue.suspended = false
-                send(card.group.bri, false)
+
+                var level = card.dragLevel
+                var groupId = card.group.groupId
+                card.dragLevel = -1
+                if (level >= 0) {
+                    // Rebuilds this delegate, so nothing may follow it.
+                    hue.setGroupBrightness(groupId, level)
+                }
             }
 
             // Ctrl+wheel nudges the level; a plain wheel is left alone so the
@@ -239,14 +262,13 @@ Item {
                     return
                 }
                 var step = wheel.angleDelta.y > 0 ? 5 : -5
-                send(Math.max(1, Math.min(100, card.group.bri + step)), false)
+                hue.setGroupBrightness(card.group.groupId,
+                                       Math.max(1, Math.min(100, card.level + step)))
                 wheel.accepted = true
             }
 
-            // Keeps the lamps following the gesture without a request per
-            // pixel. The bridge rate-limits group commands to roughly one a
-            // second, so this stays well inside that; the final value is sent
-            // on release regardless.
+            // Pushes the dragged level to the bridge while the gesture runs.
+            // The bridge rate-limits group commands to roughly one a second.
             Timer {
                 id: throttle
                 interval: 1000
@@ -256,7 +278,9 @@ Item {
                         stop()
                         return
                     }
-                    scrub.send(card.group.bri, false)
+                    if (card.dragLevel >= 0) {
+                        hue.setGroupBrightnessLive(card.group.groupId, card.dragLevel)
+                    }
                 }
             }
         }
@@ -299,7 +323,7 @@ Item {
                             return "Off  ·  " + total + " " + noun
                         }
                         var lit = card.group.litCount + " of " + total + " on"
-                        return card.dimmable ? card.group.bri + "%  ·  " + lit : lit
+                        return card.dimmable ? card.level + "%  ·  " + lit : lit
                     }
                     font: theme.captionFont
                     color: card.mutedInk
