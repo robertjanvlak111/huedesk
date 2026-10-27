@@ -30,7 +30,8 @@ Kirigami.FormLayout {
         id: fontBox
         Kirigami.FormData.label: "Font:"
         editable: false
-        model: ["System default"].concat(Qt.fontFamilies())
+        readonly property string defaultLabel: "Hue Desk default (Archivo SemiExpanded)"
+        model: [defaultLabel].concat(Qt.fontFamilies())
         currentIndex: {
             if (page.cfg_fontFamily === "") {
                 return 0

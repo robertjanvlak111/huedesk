@@ -20,6 +20,7 @@
     <entry name="themeMode" type="String">
       <default>auto</default>
     </entry>
+    <!-- Empty means the bundled Archivo SemiExpanded; otherwise a family name. -->
     <entry name="fontFamily" type="String">
       <default></default>
     </entry>

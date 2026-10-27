@@ -330,10 +330,18 @@ class Backend(QObject):
             out.append(line)
         cfg.write_text("\n".join(out) + "\n")
 
+    # Shown as the first entry of the font picker and meaning "use the font
+    # bundled with the widget"; stored as an empty string.
+    DEFAULT_FONT_LABEL = "Hue Desk default (Archivo SemiExpanded)"
+
     @Slot(result="QVariant")
     def fontFamilies(self) -> list:
         from PySide6.QtGui import QFontDatabase
-        return ["System default"] + sorted(set(QFontDatabase.families()))
+        return [self.DEFAULT_FONT_LABEL] + sorted(set(QFontDatabase.families()))
+
+    @Slot(result=str)
+    def defaultFontLabel(self) -> str:
+        return self.DEFAULT_FONT_LABEL
 
     @Slot()
     def openWidgetConfig(self) -> None:

@@ -88,6 +88,13 @@ The icons in `package/contents/icons/` are bundled deliberately: Breeze has no
 `lightbulb-symbolic`, `sofa-symbolic` or `bed-symbolic`, and a widget that
 other people install should not depend on their icon theme.
 
+The font is bundled for the same reason. `Theme.qml` loads Archivo
+SemiExpanded with three `FontLoader`s, which register it for the running
+process only — nothing is installed system-wide. An empty `fontFamily` setting
+means "use the bundled font"; `Theme.family` falls back to the Plasma default
+if the files somehow fail to load, so a missing font never leaves text
+unrendered.
+
 ## The view has no Plasmoid dependency
 
 `FullRepresentation` and everything under it take plain properties.

@@ -14,6 +14,7 @@ QtObject {
     id: theme
 
     property string mode: "auto"          // auto | light | dark
+    // Empty means "use the bundled font"; anything else names an installed family.
     property string fontFamilyOverride: ""
     property int fontScale: 100           // percent
     property string density: "cosy"       // compact | cosy | comfortable
@@ -65,9 +66,34 @@ QtObject {
                                    : Math.round(unit * 1.8)
 
     // -- type -------------------------------------------------------------
-    readonly property string family: fontFamilyOverride !== ""
-                                     ? fontFamilyOverride
-                                     : Kirigami.Theme.defaultFont.family
+    //
+    // Archivo SemiExpanded ships with the widget (SIL OFL 1.1, see
+    // contents/fonts/OFL.txt) so that Hue Desk looks the same on every
+    // machine instead of depending on what the user happens to have
+    // installed. FontLoader registers it for this process only.
+    property FontLoader _fontRegular: FontLoader {
+        source: Qt.resolvedUrl("../fonts/ArchivoSemiExpanded-Regular.ttf")
+    }
+    property FontLoader _fontMedium: FontLoader {
+        source: Qt.resolvedUrl("../fonts/ArchivoSemiExpanded-Medium.ttf")
+    }
+    property FontLoader _fontSemiBold: FontLoader {
+        source: Qt.resolvedUrl("../fonts/ArchivoSemiExpanded-SemiBold.ttf")
+    }
+
+    // Empty until the file has loaded, or if it failed to load at all.
+    readonly property string bundledFamily: _fontRegular.status === FontLoader.Ready
+                                            ? _fontRegular.font.family : ""
+
+    readonly property string family: {
+        if (fontFamilyOverride !== "") {
+            return fontFamilyOverride
+        }
+        if (bundledFamily !== "") {
+            return bundledFamily
+        }
+        return Kirigami.Theme.defaultFont.family
+    }
     readonly property real scale: Math.max(0.7, Math.min(1.8, fontScale / 100))
 
     readonly property font titleFont: Qt.font({

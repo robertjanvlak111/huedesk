@@ -59,7 +59,7 @@ the preview on the right is the real widget, loaded from the installed files.
 | | |
 | --- | --- |
 | **Theme** | Light, dark, or follow the desktop |
-| **Font and text size** | Any installed family, 75–150% |
+| **Font and text size** | Archivo SemiExpanded by default, or any installed family, 75–150% |
 | **Density** | Compact, cosy or comfortable spacing |
 | **Corner rounding, card opacity** | Match your desktop's look |
 | **Content** | Show or hide the header, individual lights, scenes, zones |
@@ -131,9 +131,20 @@ bug report.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Bug reports and patches are welcome.
 
+## Typography
+
+Hue Desk ships with **Archivo SemiExpanded** by Omnibus-Type, under the
+[SIL Open Font License 1.1](package/contents/fonts/OFL.txt). It is a grotesque
+drawn for legibility at interface sizes, and its semi-expanded width gives the
+open, airy feel of the Hue app.
+
+The font is bundled rather than merely requested, so the widget looks the same
+on every machine. Pick any installed family instead in the settings app.
+
 ## License
 
-[MIT](LICENSE).
+Hue Desk is [MIT](LICENSE). The bundled font is SIL OFL 1.1 and keeps its own
+[licence file](package/contents/fonts/OFL.txt).
 
 Not affiliated with, endorsed by, or connected to Signify or Philips. "Philips
 Hue" is their trademark; this is an independent project that talks to the

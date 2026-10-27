@@ -42,7 +42,7 @@ ApplicationWindow {
             themeBox.currentIndex = themeBox.indexOfValue(cfg.themeMode)
             densityBox.currentIndex = densityBox.indexOfValue(cfg.density)
             fontBox.currentIndex = Math.max(0, fontBox.model.indexOf(
-                cfg.fontFamily === "" ? "System default" : cfg.fontFamily))
+                cfg.fontFamily === "" ? backend.defaultFontLabel() : cfg.fontFamily))
             scaleSlider.value = cfg.fontScale
             radiusSlider.value = cfg.cornerRadius
             opacitySlider.value = cfg.cardOpacity

@@ -18,6 +18,8 @@ a dedicated application.
 - A scrolling scene carousel that marks the scene currently active.
 - Zone support alongside rooms.
 - A bundled icon set, so the widget looks the same under any icon theme.
+- Archivo SemiExpanded (SIL OFL 1.1) bundled as the default font, loaded with
+  `FontLoader` so it needs no system installation.
 - Unit tests for the colour conversions and the CLIP v2 model, run in Qt's
   JavaScript engine against the shipped `.js` files.
 - `tools/render.py`, which renders the widget offscreen for documentation.
