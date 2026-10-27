@@ -43,7 +43,8 @@ Item {
                 anchors.centerIn: parent
                 text: modelData.name
                 font: theme.captionFont
-                color: modelData.active ? "#241a06" : theme.onSurfaceMuted
+                color: modelData.active ? theme.inkFor(theme.accent)
+                                        : theme.onSurfaceMuted
             }
 
             MouseArea {

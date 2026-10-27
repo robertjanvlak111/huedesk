@@ -1,10 +1,11 @@
 /*
  * RoomCard.qml - a room or zone, drawn the way the Hue app draws one: the card
  * itself is the brightness control. Its fill tracks brightness and takes the
- * colour of the lights in the room; dragging across the card dims it.
+ * colour of the lights in the room.
  *
- * Power and expand are explicit buttons so that a plain click is never
- * ambiguous, and dragging only takes effect past a small threshold.
+ * Because the fill colour is whatever the bulbs happen to be, the card's
+ * background can end up light or dark independently of the theme, so the text
+ * colour is derived from the actual composited background rather than fixed.
  */
 
 import QtQuick
@@ -45,6 +46,36 @@ Item {
     }
 
     implicitHeight: bar.height + (expanded ? extra.implicitHeight + theme.gap : 0)
+
+    // -- colour -----------------------------------------------------------
+    readonly property real fillAlphaStart: 0.46
+    readonly property real fillAlphaEnd: 0.18
+    readonly property real fillOpacity: 0.85
+
+    readonly property color tintColor: view && view.accentTint && group
+                                       ? theme.litFill(group.hex) : theme.accent
+
+    // The card sits on the widget background and may itself be translucent.
+    readonly property color surfaceColor:
+        theme.blend(theme.background, theme.surface, theme.cardAlpha / 100)
+
+    readonly property real fillWidth: Math.max(bar.height, bar.width * fraction)
+
+    // Sampled where the room name begins; that is what the ink has to suit.
+    readonly property real probeX: theme.pad + theme.unit * 1.15
+                                   + theme.gap + theme.unit * 1.2
+
+    readonly property color labelBackdrop: {
+        if (!isOn || probeX > fillWidth || fillWidth <= 0) {
+            return surfaceColor
+        }
+        var t = Math.max(0, Math.min(1, probeX / fillWidth))
+        var alpha = (fillAlphaStart + (fillAlphaEnd - fillAlphaStart) * t) * fillOpacity
+        return theme.blend(surfaceColor, tintColor, alpha)
+    }
+
+    readonly property color ink: theme.inkFor(labelBackdrop)
+    readonly property color mutedInk: theme.mutedInkFor(labelBackdrop)
 
     // Hue's room archetypes mapped onto the icons bundled with this widget.
     // Shipping our own avoids depending on whatever icon theme the user has.
@@ -91,76 +122,142 @@ Item {
             id: fill
             visible: card.isOn
             height: parent.height
-            width: Math.max(parent.height, parent.width * card.fraction)
+            width: card.fillWidth
             radius: parent.radius
-            opacity: 0.85
+            opacity: card.fillOpacity
 
             gradient: Gradient {
                 orientation: Gradient.Horizontal
                 GradientStop {
                     position: 0.0
-                    color: {
-                        var base = view && view.accentTint && card.group
-                                 ? theme.litFill(card.group.hex) : theme.accent
-                        return Qt.rgba(base.r, base.g, base.b, 0.55)
-                    }
+                    color: Qt.rgba(card.tintColor.r, card.tintColor.g,
+                                   card.tintColor.b, card.fillAlphaStart)
                 }
                 GradientStop {
                     position: 1.0
-                    color: {
-                        var base = view && view.accentTint && card.group
-                                 ? theme.litFill(card.group.hex) : theme.accent
-                        return Qt.rgba(base.r, base.g, base.b, 0.22)
-                    }
+                    color: Qt.rgba(card.tintColor.r, card.tintColor.g,
+                                   card.tintColor.b, card.fillAlphaEnd)
                 }
             }
 
             Behavior on width {
-                enabled: !drag.active
+                enabled: !scrub.scrubbing
                 NumberAnimation { duration: Kirigami.Units.longDuration
                                   easing.type: Easing.OutCubic }
             }
         }
 
-        // Drag anywhere on the bar to dim. Buttons sit above this and so win
-        // the press, which keeps a click on them unambiguous.
+        // Brightness scrubbing.
+        //
+        // The card lives inside a vertically scrolling list, so the gesture
+        // direction is resolved first: a horizontal drag takes the grab and
+        // dims, a vertical one is left to the list. A plain click sets the
+        // level where it lands, which is what makes hitting an exact
+        // percentage possible.
         MouseArea {
-            id: drag
+            id: scrub
             anchors.fill: parent
             enabled: card.dimmable
-            property bool active: false
-            property real startX: 0
-            readonly property int threshold: Kirigami.Units.gridUnit / 2
+            cursorShape: card.dimmable ? Qt.SizeHorCursor : Qt.ArrowCursor
+            acceptedButtons: Qt.LeftButton
+
+            property bool scrubbing: false
+            property bool decided: false
+            property real pressX: 0
+            property real pressY: 0
+            readonly property int slop: 4
+
+            function levelAt(x) {
+                return Math.max(1, Math.min(100, Math.round((x / width) * 100)))
+            }
+
+            function send(level, localOnly) {
+                hue.setGroupBrightness(card.group.groupId, level, localOnly)
+            }
 
             onPressed: (mouse) => {
-                startX = mouse.x
-                active = false
+                pressX = mouse.x
+                pressY = mouse.y
+                decided = false
+                scrubbing = false
             }
+
             onPositionChanged: (mouse) => {
-                if (!active && Math.abs(mouse.x - startX) < threshold) {
-                    return
-                }
-                if (!active) {
-                    active = true
+                if (!decided) {
+                    var dx = Math.abs(mouse.x - pressX)
+                    var dy = Math.abs(mouse.y - pressY)
+                    if (dx < slop && dy < slop) {
+                        return
+                    }
+                    decided = true
+                    if (dy > dx) {
+                        // Vertical: hand the gesture back to the list.
+                        preventStealing = false
+                        return
+                    }
+                    scrubbing = true
+                    preventStealing = true
                     hue.suspended = true
+                    throttle.restart()
                 }
-                var f = Math.max(0.01, Math.min(1, mouse.x / width))
-                hue.setGroupBrightness(card.group.groupId, Math.round(f * 100), true)
-                commit.restart()
-            }
-            onReleased: {
-                if (active) {
-                    active = false
-                    hue.suspended = false
-                    commit.stop()
-                    hue.setGroupBrightness(card.group.groupId, card.group.bri)
+                if (scrubbing) {
+                    send(levelAt(mouse.x), true)
                 }
             }
 
+            onReleased: (mouse) => {
+                if (scrubbing) {
+                    finish()
+                } else if (!decided) {
+                    // A click: set the level where it was clicked.
+                    send(levelAt(mouse.x), false)
+                }
+                decided = false
+                preventStealing = false
+            }
+
+            onCanceled: {
+                if (scrubbing) {
+                    finish()
+                }
+                decided = false
+                preventStealing = false
+            }
+
+            function finish() {
+                scrubbing = false
+                throttle.stop()
+                hue.suspended = false
+                send(card.group.bri, false)
+            }
+
+            // Ctrl+wheel nudges the level; a plain wheel is left alone so the
+            // list can still be scrolled with the pointer over a card.
+            onWheel: (wheel) => {
+                if (!(wheel.modifiers & Qt.ControlModifier)) {
+                    wheel.accepted = false
+                    return
+                }
+                var step = wheel.angleDelta.y > 0 ? 5 : -5
+                send(Math.max(1, Math.min(100, card.group.bri + step)), false)
+                wheel.accepted = true
+            }
+
+            // Keeps the lamps following the gesture without a request per
+            // pixel. The bridge rate-limits group commands to roughly one a
+            // second, so this stays well inside that; the final value is sent
+            // on release regardless.
             Timer {
-                id: commit
-                interval: 180
-                onTriggered: hue.setGroupBrightness(card.group.groupId, card.group.bri)
+                id: throttle
+                interval: 1000
+                repeat: true
+                onTriggered: {
+                    if (!scrub.scrubbing) {
+                        stop()
+                        return
+                    }
+                    scrub.send(card.group.bri, false)
+                }
             }
         }
 
@@ -174,8 +271,7 @@ Item {
                 source: Qt.resolvedUrl("../icons/"
                         + card.roomIcon(card.group ? card.group.archetype : "") + ".svg")
                 isMask: true
-                color: card.isOn ? theme.onSurface : theme.onSurfaceMuted
-                opacity: card.isOn ? 1.0 : 0.65
+                color: card.isOn ? card.ink : card.mutedInk
                 Layout.preferredWidth: Math.round(theme.unit * 1.15)
                 Layout.preferredHeight: Layout.preferredWidth
             }
@@ -187,7 +283,7 @@ Item {
                 PlasmaComponents.Label {
                     text: card.group ? card.group.name : ""
                     font: theme.labelFont
-                    color: theme.onSurface
+                    color: card.ink
                     elide: Text.ElideRight
                     Layout.fillWidth: true
                 }
@@ -206,7 +302,7 @@ Item {
                         return card.dimmable ? card.group.bri + "%  ·  " + lit : lit
                     }
                     font: theme.captionFont
-                    color: theme.onSurfaceMuted
+                    color: card.mutedInk
                     elide: Text.ElideRight
                     Layout.fillWidth: true
                 }
@@ -230,7 +326,7 @@ Item {
                     height: width
                     source: Qt.resolvedUrl("../icons/power.svg")
                     isMask: true
-                    color: card.isOn ? "#241a06" : theme.onSurfaceMuted
+                    color: card.isOn ? theme.inkFor(theme.accent) : card.mutedInk
                 }
 
                 MouseArea {
@@ -256,8 +352,8 @@ Item {
                     source: Qt.resolvedUrl(card.expanded ? "../icons/chevron-up.svg"
                                                          : "../icons/chevron-down.svg")
                     isMask: true
-                    color: theme.onSurfaceMuted
-                    opacity: chevronArea.containsMouse ? 1.0 : 0.75
+                    color: card.mutedInk
+                    opacity: chevronArea.containsMouse ? 1.0 : 0.8
                 }
 
                 MouseArea {

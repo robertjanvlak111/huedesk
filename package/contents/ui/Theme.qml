@@ -50,6 +50,58 @@ QtObject {
         return isDark ? Qt.darker(c, 1.25) : Qt.lighter(c, 1.05)
     }
 
+    // -- contrast ----------------------------------------------------------
+    //
+    // A card's background is whatever colour the lights in it happen to be,
+    // so no fixed text colour works: a pale bulb at full brightness produces
+    // a light card even under a dark theme. Ink is therefore chosen from the
+    // actual composited background rather than from the theme.
+
+    readonly property color inkDark: "#15151a"
+    readonly property color inkLight: "#f3f3f6"   // soft white, not pure
+
+    function _channel(v) {
+        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
+    }
+
+    // WCAG relative luminance.
+    function luminance(c) {
+        return 0.2126 * _channel(c.r)
+             + 0.7152 * _channel(c.g)
+             + 0.0722 * _channel(c.b)
+    }
+
+    function contrast(a, b) {
+        var la = luminance(a)
+        var lb = luminance(b)
+        var hi = Math.max(la, lb)
+        var lo = Math.min(la, lb)
+        return (hi + 0.05) / (lo + 0.05)
+    }
+
+    // Flatten a translucent colour onto what sits behind it.
+    function blend(base, top, alpha) {
+        var a = Math.max(0, Math.min(1, alpha))
+        return Qt.rgba(base.r + (top.r - base.r) * a,
+                       base.g + (top.g - base.g) * a,
+                       base.b + (top.b - base.b) * a,
+                       1)
+    }
+
+    // Whichever ink actually reads better on this background. Comparing
+    // contrast ratios avoids picking a luminance threshold out of the air.
+    function inkFor(background) {
+        return contrast(inkDark, background) >= contrast(inkLight, background)
+               ? inkDark : inkLight
+    }
+
+    // Secondary text: the same ink, stepped back just enough to read as
+    // secondary while staying above the 4.5:1 WCAG AA bar for small text.
+    function mutedInkFor(background) {
+        var ink = inkFor(background)
+        return Qt.rgba(ink.r, ink.g, ink.b, 0.88)
+    }
+
     // -- metrics ----------------------------------------------------------
     readonly property int unit: Kirigami.Units.gridUnit
     readonly property int gap: density === "compact" ? Math.round(unit * 0.25)

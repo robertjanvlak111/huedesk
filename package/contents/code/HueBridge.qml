@@ -26,9 +26,31 @@ QtObject {
     property string lastError: ""
     property bool refreshing: false
 
-    // Raised while a slider is under the finger: a poll mid-drag would rebuild
-    // the models and tear the delegate out from under the user.
+    // Raised while a brightness control is under the pointer: a poll mid-drag
+    // would rebuild the models and tear the delegate out from under the user.
+    //
+    // It is a single flag shared by every card, so a press that is lost (the
+    // pointer leaving the window, a delegate going away mid-gesture) could
+    // otherwise leave it raised and freeze polling for good. The watchdog
+    // makes that state self-correcting.
     property bool suspended: false
+
+    onSuspendedChanged: {
+        if (suspended) {
+            suspendGuard.restart()
+        } else {
+            suspendGuard.stop()
+        }
+    }
+
+    property QtObject suspendGuard: Timer {
+        interval: 8000
+        onTriggered: {
+            // No gesture lasts this long; the press was lost somewhere.
+            bridge.suspended = false
+            bridge.refresh()
+        }
+    }
 
     // Rooms and zones, merged. Each: id, name, kind, groupId, on, bri, lightIds, hex
     property var groups: []

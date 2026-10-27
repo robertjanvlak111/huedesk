@@ -139,7 +139,8 @@ Item {
                     height: width
                     source: Qt.resolvedUrl("../icons/power.svg")
                     isMask: true
-                    color: hue && hue.anyOn ? "#241a06" : theme.onSurfaceMuted
+                    color: hue && hue.anyOn ? theme.inkFor(theme.accent)
+                             : theme.onSurfaceMuted
                 }
 
                 MouseArea {

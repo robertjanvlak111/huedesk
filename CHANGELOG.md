@@ -4,6 +4,25 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-10-27
+
+### Changed
+- Brightness is now set by clicking a card at the level you want, or dragging
+  across it. Ctrl+scroll nudges by 5%.
+- Text colour is derived from the composited background a label sits on rather
+  than from the theme, so a pale bulb no longer leaves dark text on a light
+  card.
+
+### Fixed
+- Dragging a card to a particular percentage was unreliable: the enclosing
+  list stole the gesture, and a 9px threshold meant the level jumped to the
+  pointer only after the drag had already begun.
+- Secondary text now clears WCAG AA 4.5:1 in both themes.
+
+### Added
+- A contrast regression test that renders both themes and measures every
+  label against its own background.
+
 ## [2.0.0] - 2026-10-27
 
 The widget was redrawn to look like the Hue app, and configuration moved into

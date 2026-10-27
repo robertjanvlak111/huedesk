@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -135,8 +136,61 @@ def main() -> int:
             else:
                 print(f"  ok    {case['name']}")
 
-    print(f"\n{total - failed}/{total} passed")
-    return 1 if failed else 0
+    visual_failed = run_contrast_suite(patterns)
+
+    print(f"\n{total - failed}/{total} unit assertions passed")
+    return 1 if (failed or visual_failed) else 0
+
+
+def run_contrast_suite(patterns) -> bool:
+    """Render the widget and check text contrast against its own background.
+
+    The card background is whatever colour the lights are, so text colour is
+    derived at runtime. This guards the result: every label must clear the
+    WCAG AA 4.5:1 bar in both themes.
+    """
+    if patterns and not any("contrast" in p or "visual" in p for p in patterns):
+        return False
+
+    try:
+        from PIL import Image  # noqa: F401
+    except ImportError:
+        print("\ncontrast: skipped (needs Pillow: pip install pillow)")
+        return False
+
+    sys.path.insert(0, str(ROOT / "tests"))
+    from visual.contrast import measure
+
+    render = ROOT / "tools" / "render.py"
+    out_dir = ROOT / ".preview"
+    out_dir.mkdir(exist_ok=True)
+
+    print("\ncontrast (WCAG AA, 4.5:1)")
+    failed = False
+    for theme in ("dark", "light"):
+        target = out_dir / f"contrast-{theme}.png"
+        proc = subprocess.run(
+            [sys.executable, str(render), "--theme", theme, "--open", "r1",
+             "--width", "400", "--height", "600", "--out", str(target)],
+            capture_output=True, text=True)
+        if proc.returncode != 0 or not target.exists():
+            print(f"  FAIL  {theme}: could not render ({proc.stderr.strip()[:120]})")
+            failed = True
+            continue
+
+        worst, rows = measure(target, quiet=True)
+        if worst is None:
+            print(f"  FAIL  {theme}: no text found in the render")
+            failed = True
+            continue
+
+        for label, ratio in rows:
+            if ratio < 4.5:
+                print(f"  FAIL  {theme}: {label} is {ratio:.2f}:1")
+                failed = True
+        if worst >= 4.5:
+            print(f"  ok    {theme}: worst label {worst:.2f}:1")
+    return failed
 
 
 if __name__ == "__main__":

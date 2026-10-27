@@ -11,6 +11,11 @@ pop-up.
 | --- | --- | --- |
 | ![Dark](screenshots/widget-dark.png) | ![Light](screenshots/widget-light.png) | ![Compact](screenshots/widget-compact.png) |
 
+**Using a card:** click anywhere on it to set that brightness, or drag across
+it to scrub. Dragging up or down still scrolls the list. Ctrl+scroll nudges a
+level by 5%. Power and expand are separate buttons, so a click is never
+ambiguous.
+
 It talks to your bridge directly over your own network. Nothing leaves your
 LAN, and there is no account, cloud service or telemetry.
 
@@ -19,7 +24,7 @@ LAN, and there is no account, cloud service or telemetry.
 **You need:** KDE Plasma 6, `curl`, and — for the settings app — PySide6.
 
 ```bash
-git clone https://github.com/rvlak/huedesk.git
+git clone https://github.com/robertjanvlak111/huedesk.git
 cd huedesk
 ./install.sh
 ```
@@ -103,6 +108,12 @@ python3 tests/run_tests.py
 The pure logic lives in plain `.js` files that QML imports directly, and the
 tests run those exact files in Qt's JavaScript engine — not a reimplementation
 of them. Only PySide6 is needed.
+
+The suite also renders the widget offscreen in both themes and measures the
+contrast of every label against its own background, failing below the WCAG AA
+4.5:1 bar. Because a card's background is whatever colour the bulbs are, that
+is not something a fixed palette can guarantee. That part needs Pillow and is
+skipped without it.
 
 ## Troubleshooting
 

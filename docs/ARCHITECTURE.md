@@ -95,6 +95,33 @@ means "use the bundled font"; `Theme.family` falls back to the Plasma default
 if the files somehow fail to load, so a missing font never leaves text
 unrendered.
 
+## Text colour is computed, not chosen
+
+A card's background is the colour of the lights inside it, so it can be light
+or dark regardless of the theme: a pale bulb at full brightness produces a
+light card even under a dark theme. No fixed text colour survives that.
+
+`Theme.inkFor()` therefore composites the background the text will actually
+sit on — surface, plus the fill at the point where the label begins, at the
+gradient's alpha there — and returns whichever of `inkDark` / `inkLight` has
+the better WCAG contrast ratio. Comparing ratios avoids inventing a luminance
+threshold.
+
+`tests/run_tests.py` renders both themes and measures the result, so a palette
+change cannot quietly reintroduce unreadable text.
+
+## Scrubbing inside a scrolling list
+
+The cards sit in a vertically scrolling list, so a brightness drag and a
+scroll gesture compete for the same press. The handler resolves direction
+first: past a 4px slop, a mostly-horizontal movement takes the grab with
+`preventStealing` and scrubs, while a mostly-vertical one is handed back to
+the list. A press that never moves is treated as a click and sets the level
+where it landed.
+
+Without `preventStealing` the Flickable steals the gesture at its own drag
+threshold, which is what made dragging feel unreliable.
+
 ## The view has no Plasmoid dependency
 
 `FullRepresentation` and everything under it take plain properties.

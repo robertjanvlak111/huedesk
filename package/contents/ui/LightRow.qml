@@ -1,7 +1,7 @@
 /*
- * LightRow.qml - one bulb, drawn as a smaller echo of RoomCard so the two
- * read as the same family. Smart plugs report no dimming, so they lose the
- * fill and keep only the power button.
+ * LightRow.qml - one bulb, drawn as a smaller echo of RoomCard so the two read
+ * as the same family. Smart plugs report no dimming, so they lose the fill and
+ * keep only the power button.
  */
 
 import QtQuick
@@ -22,6 +22,26 @@ Item {
 
     implicitHeight: theme.rowHeight
 
+    // -- colour -----------------------------------------------------------
+    readonly property real fillAlpha: (theme.isDark ? 0.35 : 0.28) * 0.7
+    readonly property color tintColor: light && !light.isPlug
+                                       ? Qt.color(light.hex) : theme.accent
+    readonly property color surfaceColor: theme.blend(theme.background,
+                                                      theme.surfaceRaised, 1.0)
+    readonly property real fillWidth: Math.max(track.height, track.width * fraction)
+    readonly property real probeX: theme.pad * 0.7 + theme.unit * 0.55
+                                   + theme.gap + theme.unit * 1.0
+
+    readonly property color labelBackdrop: {
+        if (!isOn || !dimmable || probeX > fillWidth) {
+            return surfaceColor
+        }
+        return theme.blend(surfaceColor, tintColor, fillAlpha)
+    }
+
+    readonly property color ink: theme.inkFor(labelBackdrop)
+    readonly property color mutedInk: theme.mutedInkFor(labelBackdrop)
+
     Rectangle {
         id: track
         anchors.fill: parent
@@ -33,55 +53,119 @@ Item {
         Rectangle {
             visible: row.isOn && row.dimmable
             height: parent.height
-            width: Math.max(parent.height, parent.width * row.fraction)
+            width: row.fillWidth
             radius: parent.radius
             opacity: 0.7
-            color: {
-                var base = light && !light.isPlug ? Qt.color(light.hex) : theme.accent
-                return Qt.rgba(base.r, base.g, base.b, theme.isDark ? 0.35 : 0.28)
-            }
+            color: Qt.rgba(row.tintColor.r, row.tintColor.g, row.tintColor.b,
+                           theme.isDark ? 0.35 : 0.28)
 
             Behavior on width {
-                enabled: !slide.active
+                enabled: !slide.scrubbing
                 NumberAnimation { duration: Kirigami.Units.longDuration
                                   easing.type: Easing.OutCubic }
             }
         }
 
+        // Same gesture handling as RoomCard: resolve direction first so the
+        // list can still be scrolled, click to set, drag to scrub.
         MouseArea {
             id: slide
             anchors.fill: parent
-            enabled: row.dimmable && row.isOn
-            property bool active: false
-            property real startX: 0
-            readonly property int threshold: Kirigami.Units.gridUnit / 2
+            enabled: row.dimmable
+            cursorShape: row.dimmable ? Qt.SizeHorCursor : Qt.ArrowCursor
+            acceptedButtons: Qt.LeftButton
 
-            onPressed: (mouse) => { startX = mouse.x; active = false }
+            property bool scrubbing: false
+            property bool decided: false
+            property real pressX: 0
+            property real pressY: 0
+            readonly property int slop: 4
+
+            function levelAt(x) {
+                return Math.max(1, Math.min(100, Math.round((x / width) * 100)))
+            }
+
+            function send(level, localOnly) {
+                hue.setLightBrightness(row.light.id, level, localOnly)
+            }
+
+            onPressed: (mouse) => {
+                pressX = mouse.x
+                pressY = mouse.y
+                decided = false
+                scrubbing = false
+            }
+
             onPositionChanged: (mouse) => {
-                if (!active && Math.abs(mouse.x - startX) < threshold) {
+                if (!decided) {
+                    var dx = Math.abs(mouse.x - pressX)
+                    var dy = Math.abs(mouse.y - pressY)
+                    if (dx < slop && dy < slop) {
+                        return
+                    }
+                    decided = true
+                    if (dy > dx) {
+                        preventStealing = false
+                        return
+                    }
+                    scrubbing = true
+                    preventStealing = true
+                    hue.suspended = true
+                    throttle.restart()
+                }
+                if (scrubbing) {
+                    send(levelAt(mouse.x), true)
+                }
+            }
+
+            onReleased: (mouse) => {
+                if (scrubbing) {
+                    finish()
+                } else if (!decided) {
+                    send(levelAt(mouse.x), false)
+                }
+                decided = false
+                preventStealing = false
+            }
+
+            onCanceled: {
+                if (scrubbing) {
+                    finish()
+                }
+                decided = false
+                preventStealing = false
+            }
+
+            function finish() {
+                scrubbing = false
+                throttle.stop()
+                hue.suspended = false
+                send(row.light.bri, false)
+            }
+
+            onWheel: (wheel) => {
+                if (!(wheel.modifiers & Qt.ControlModifier)) {
+                    wheel.accepted = false
                     return
                 }
-                if (!active) {
-                    active = true
-                    hue.suspended = true
-                }
-                var f = Math.max(0.01, Math.min(1, mouse.x / width))
-                hue.setLightBrightness(row.light.id, Math.round(f * 100), true)
-                commit.restart()
-            }
-            onReleased: {
-                if (active) {
-                    active = false
-                    hue.suspended = false
-                    commit.stop()
-                    hue.setLightBrightness(row.light.id, row.light.bri)
-                }
+                var step = wheel.angleDelta.y > 0 ? 5 : -5
+                send(Math.max(1, Math.min(100, row.light.bri + step)), false)
+                wheel.accepted = true
             }
 
+            // Individual lights tolerate about ten commands a second; this
+            // stays comfortably under that.
             Timer {
-                id: commit
-                interval: 180
-                onTriggered: hue.setLightBrightness(row.light.id, row.light.bri)
+                id: throttle
+                interval: 300
+                repeat: true
+                onTriggered: {
+                    if (!slide.scrubbing) {
+                        stop()
+                        return
+                    }
+                    slide.send(row.light.bri, false)
+                }
             }
         }
 
@@ -111,7 +195,7 @@ Item {
             PlasmaComponents.Label {
                 text: light ? light.name : ""
                 font: theme.captionFont
-                color: row.isOn ? theme.onSurface : theme.onSurfaceMuted
+                color: row.isOn ? row.ink : row.mutedInk
                 elide: Text.ElideRight
                 Layout.fillWidth: true
             }
@@ -120,7 +204,7 @@ Item {
                 visible: row.isOn && row.dimmable
                 text: light ? light.bri + "%" : ""
                 font: theme.captionFont
-                color: theme.onSurfaceMuted
+                color: row.mutedInk
             }
 
             Rectangle {
@@ -137,7 +221,7 @@ Item {
                     height: width
                     source: Qt.resolvedUrl("../icons/power.svg")
                     isMask: true
-                    color: row.isOn ? "#241a06" : theme.onSurfaceMuted
+                    color: row.isOn ? theme.inkFor(theme.accent) : row.mutedInk
                 }
 
                 MouseArea {
