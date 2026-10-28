@@ -10,6 +10,7 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.kirigami as Kirigami
 
 import "../code" as HueCode
+import "../code/Support.js" as Support
 
 PlasmoidItem {
     id: root
@@ -41,6 +42,23 @@ PlasmoidItem {
         }
         var on = hueBridge.lights.filter(l => l.on).length
         return on + " of " + hueBridge.lights.length + " lights on"
+    }
+
+    // The support message is shown at most once, ever. The flag is written
+    // the moment it is displayed rather than when it is dismissed, so a crash
+    // or a restart cannot bring it back.
+    property bool supportPromptVisible: false
+
+    Component.onCompleted: {
+        if (Plasmoid.configuration.firstRunDate === "") {
+            Plasmoid.configuration.firstRunDate = Support.todayIso()
+        }
+        if (Support.shouldPrompt(Plasmoid.configuration.firstRunDate,
+                                 Plasmoid.configuration.supportPromptShown,
+                                 Support.todayIso())) {
+            Plasmoid.configuration.supportPromptShown = true
+            supportPromptVisible = true
+        }
     }
 
     Theme {
@@ -110,5 +128,7 @@ PlasmoidItem {
         showZones: Plasmoid.configuration.showZones
         accentTint: Plasmoid.configuration.accentTint
         showHeader: Plasmoid.configuration.showHeader
+        showSupportPrompt: root.supportPromptVisible
+        onSupportPromptDismissed: root.supportPromptVisible = false
     }
 }

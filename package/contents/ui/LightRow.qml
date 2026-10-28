@@ -234,13 +234,12 @@ Item {
                 border.width: row.isOn ? 0 : 1
                 border.color: theme.outline
 
-                Kirigami.Icon {
+                TintedIcon {
                     anchors.centerIn: parent
                     width: Math.round(theme.unit * 0.6)
                     height: width
-                    source: Qt.resolvedUrl("../icons/power.svg")
-                    isMask: true
-                    color: row.isOn ? theme.inkFor(theme.accent) : row.mutedInk
+                    name: "power"
+                    tint: row.isOn ? theme.inkFor(theme.accent) : row.mutedInk
                 }
 
                 MouseArea {

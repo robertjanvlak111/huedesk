@@ -24,6 +24,10 @@ Item {
     property bool accentTint: true
     property bool showHeader: true
 
+    // The one-time support message. main.qml decides whether it is due.
+    property bool showSupportPrompt: false
+    signal supportPromptDismissed()
+
     // Each poll replaces the model arrays, destroying every delegate, so
     // expansion state has to live above them.
     property var expandedIds: []
@@ -101,13 +105,12 @@ Item {
                 Layout.preferredWidth: Math.round(theme.unit * 1.7)
                 Layout.preferredHeight: Math.round(theme.unit * 1.7)
 
-                Kirigami.Icon {
+                TintedIcon {
                     anchors.centerIn: parent
                     width: Math.round(theme.unit * 0.95)
                     height: width
-                    source: Qt.resolvedUrl("../icons/refresh.svg")
-                    isMask: true
-                    color: theme.onSurfaceMuted
+                    name: "refresh"
+                    tint: theme.onSurfaceMuted
                     opacity: hue && hue.refreshing ? 0.4
                              : (refreshArea.containsMouse ? 1.0 : 0.75)
                 }
@@ -133,14 +136,13 @@ Item {
 
                 Behavior on color { ColorAnimation { duration: Kirigami.Units.shortDuration } }
 
-                Kirigami.Icon {
+                TintedIcon {
                     anchors.centerIn: parent
                     width: Math.round(theme.unit)
                     height: width
-                    source: Qt.resolvedUrl("../icons/power.svg")
-                    isMask: true
-                    color: hue && hue.anyOn ? theme.inkFor(theme.accent)
-                             : theme.onSurfaceMuted
+                    name: "power"
+                    tint: hue && hue.anyOn ? theme.inkFor(theme.accent)
+                          : theme.onSurfaceMuted
                 }
 
                 MouseArea {
@@ -221,6 +223,17 @@ Item {
 
                 Item { Layout.fillHeight: true }
             }
+        }
+    }
+
+    Loader {
+        anchors.fill: parent
+        z: 100
+        active: root.showSupportPrompt
+        visible: active
+        sourceComponent: SupportPrompt {
+            theme: root.theme
+            onDismissed: root.supportPromptDismissed()
         }
     }
 }

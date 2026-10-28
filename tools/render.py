@@ -37,6 +37,8 @@ def main() -> int:
     ap.add_argument("--width", type=int, default=420)
     ap.add_argument("--height", type=int, default=640)
     ap.add_argument("--open", default="", help="comma-separated room ids to expand")
+    ap.add_argument("--support", action="store_true",
+                    help="show the one-time support message")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 
@@ -52,6 +54,7 @@ def main() -> int:
         "fontFamily": args.font_family,
         "cornerRadius": args.radius,
         "openRooms": [r for r in args.open.split(",") if r],
+        "supportPrompt": args.support,
     }
     view.setInitialProperties(props)
     view.setSource(QUrl.fromLocalFile(str(REPO / "tools" / "preview.qml")))

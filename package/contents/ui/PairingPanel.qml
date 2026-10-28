@@ -17,10 +17,9 @@ ColumnLayout {
 
     Item { Layout.fillHeight: true }
 
-    Kirigami.Icon {
-        source: Qt.resolvedUrl("../icons/bulb.svg")
-        isMask: true
-        color: theme.accent
+    TintedIcon {
+        name: "bulb"
+        tint: theme.accent
         Layout.alignment: Qt.AlignHCenter
         Layout.preferredWidth: Math.round(theme.unit * 3)
         Layout.preferredHeight: Layout.preferredWidth

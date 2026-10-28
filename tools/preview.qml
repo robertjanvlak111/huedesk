@@ -17,6 +17,7 @@ Item {
     property int cornerRadius: 14
     property string fontFamily: ""
     property var openRooms: []
+    property bool supportPrompt: false
 
     width: 420
     height: 640
@@ -37,6 +38,7 @@ Item {
         anchors.fill: parent
         hue: mock
         theme: previewTheme
+        showSupportPrompt: scene.supportPrompt
         Component.onCompleted: expandedIds = scene.openRooms
     }
 }

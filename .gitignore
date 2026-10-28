@@ -21,3 +21,6 @@ dist/
 
 # local render scratch
 .preview/
+
+# build output
+dist/

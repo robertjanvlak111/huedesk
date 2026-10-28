@@ -21,16 +21,16 @@ Item {
         return lit.length > 0 ? lit[0].hex : (theme ? theme.accent : Kirigami.Theme.highlightColor)
     }
 
-    Kirigami.Icon {
+    TintedIcon {
         anchors.centerIn: parent
         width: Math.min(parent.width, parent.height)
         height: width
-        source: Qt.resolvedUrl("../icons/bulb.svg")
-        isMask: true
-        color: compact.tint
+        name: "bulb"
+        tint: compact.tint
         opacity: hue && hue.anyOn ? 1.0 : 0.6
 
-        Behavior on color { ColorAnimation { duration: Kirigami.Units.longDuration } }
+        // TintedIcon is an Image; the colour lives in `tint`, not `color`.
+        Behavior on tint { ColorAnimation { duration: Kirigami.Units.longDuration } }
     }
 
     Rectangle {

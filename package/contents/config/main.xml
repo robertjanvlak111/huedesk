@@ -40,6 +40,14 @@
       <default>100</default>
     </entry>
 
+    <!-- Support message: shown once, after 90 days of use. -->
+    <entry name="firstRunDate" type="String">
+      <default></default>
+    </entry>
+    <entry name="supportPromptShown" type="Bool">
+      <default>false</default>
+    </entry>
+
     <!-- Content -->
     <entry name="showLights" type="Bool">
       <default>true</default>

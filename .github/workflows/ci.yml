@@ -72,6 +72,9 @@ jobs:
                   print('FAIL', p, e); bad = 1
           sys.exit(bad)"
 
+      - name: Icons.js matches the SVG files
+        run: python3 tools/gen_icons.py --check
+
       - name: Shell scripts parse
         run: bash -n install.sh && bash -n uninstall.sh
 

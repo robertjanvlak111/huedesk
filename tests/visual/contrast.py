@@ -57,6 +57,36 @@ BANDS = [
     ("Office name",     404, 422),
 ]
 
+# Icon column of each card, in a render with no room expanded. Icons are a
+# solid shape rather than text, so they are measured as a block.
+ICON_BANDS = [
+    ("Living room icon", 26, 43, 75, 93),
+    ("Bedroom icon",     26, 43, 139, 157),
+    ("Kitchen icon",     26, 43, 203, 221),
+    ("Office icon (off)", 26, 43, 267, 285),
+]
+
+
+def measure_icons(path, quiet=False):
+    """Contrast of each card's icon against the card behind it.
+
+    Guards a bug where bundled SVGs rendered as black silhouettes, invisible
+    on a dark card, because Kirigami.Icon ignores `color` for file sources.
+    """
+    img = Image.open(path).convert("RGB")
+    rows = []
+    for name, x0, x1, y0, y1 in ICON_BANDS:
+        px = [img.getpixel((x, y)) for x in range(x0, x1) for y in range(y0, y1)]
+        base = Counter(px).most_common(1)[0][0]
+        far = max(px, key=lambda p: abs(lum(p) - lum(base)))
+        r = ratio(base, far)
+        rows.append((name, r))
+        if not quiet:
+            verdict = "PASS" if r >= 4.5 else ("weak" if r >= 3.0 else "FAIL")
+            print(f"  {name:<20} contrast={r:5.2f}  {verdict}")
+    return (min(r for _, r in rows) if rows else None), rows
+
+
 def measure(path, quiet=False):
     """Return (worst_ratio, [(label, ratio), ...]) for a rendered widget."""
     img = Image.open(path).convert("RGB")

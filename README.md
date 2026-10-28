@@ -3,6 +3,7 @@
 [![CI](https://github.com/robertjanvlak111/huedesk/actions/workflows/ci.yml/badge.svg)](https://github.com/robertjanvlak111/huedesk/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![KDE Plasma 6](https://img.shields.io/badge/KDE%20Plasma-6-1d99f3.svg)](https://kde.org/plasma-desktop/)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-support-ff5e5b.svg)](https://ko-fi.com/robertjanvlak)
 
 A Philips Hue widget that lives on your KDE Plasma desktop, styled after the
 Hue app rather than a settings dialog. Rooms are brightness bars you drag,
@@ -43,6 +44,10 @@ curl -s https://discovery.meethue.com/
 The second command prints your bridge's address, which is handy later.
 
 ## Install
+
+> A KDE Store listing is planned, which will make Hue Desk installable from
+> **Add Widgets… → Get New Widgets…**. Until then, use the clone below.
+> Maintainers: see [docs/PUBLISHING.md](docs/PUBLISHING.md).
 
 ```bash
 git clone https://github.com/robertjanvlak111/huedesk.git
@@ -190,6 +195,16 @@ Your bridge key is stored in Plasma's applet configuration
 as any other Plasma widget's settings. It only grants control of lights on
 your own network, but it is not secret storage. Do not paste that file into a
 bug report.
+
+## Support
+
+Hue Desk is free and always will be. If it has been useful, you can
+[buy me a coffee](https://ko-fi.com/robertjanvlak).
+
+The widget asks about this exactly once, after about three months of use, and
+says so when it does. It never asks again, whether or not you act on it.
+Nothing is sent anywhere — the date of first use is a line in your own Plasma
+config, and the check happens entirely on your machine.
 
 ## Contributing
 

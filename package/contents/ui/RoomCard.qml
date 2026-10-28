@@ -291,11 +291,9 @@ Item {
             anchors.rightMargin: Math.round(theme.pad / 2)
             spacing: theme.gap
 
-            Kirigami.Icon {
-                source: Qt.resolvedUrl("../icons/"
-                        + card.roomIcon(card.group ? card.group.archetype : "") + ".svg")
-                isMask: true
-                color: card.isOn ? card.ink : card.mutedInk
+            TintedIcon {
+                name: card.roomIcon(card.group ? card.group.archetype : "")
+                tint: card.isOn ? card.ink : card.mutedInk
                 Layout.preferredWidth: Math.round(theme.unit * 1.15)
                 Layout.preferredHeight: Layout.preferredWidth
             }
@@ -344,13 +342,12 @@ Item {
 
                 Behavior on color { ColorAnimation { duration: Kirigami.Units.shortDuration } }
 
-                Kirigami.Icon {
+                TintedIcon {
                     anchors.centerIn: parent
                     width: Math.round(theme.unit * 0.85)
                     height: width
-                    source: Qt.resolvedUrl("../icons/power.svg")
-                    isMask: true
-                    color: card.isOn ? theme.inkFor(theme.accent) : card.mutedInk
+                    name: "power"
+                    tint: card.isOn ? theme.inkFor(theme.accent) : card.mutedInk
                 }
 
                 MouseArea {
@@ -369,14 +366,12 @@ Item {
                 Layout.preferredWidth: Math.round(theme.unit * 1.5)
                 Layout.preferredHeight: Math.round(theme.unit * 1.5)
 
-                Kirigami.Icon {
+                TintedIcon {
                     anchors.centerIn: parent
                     width: Math.round(theme.unit * 0.8)
                     height: width
-                    source: Qt.resolvedUrl(card.expanded ? "../icons/chevron-up.svg"
-                                                         : "../icons/chevron-down.svg")
-                    isMask: true
-                    color: card.mutedInk
+                    name: card.expanded ? "chevron-up" : "chevron-down"
+                    tint: card.mutedInk
                     opacity: chevronArea.containsMouse ? 1.0 : 0.8
                 }
 

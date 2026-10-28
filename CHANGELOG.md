@@ -4,6 +4,23 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-10-28
+
+### Added
+- A one-time support message, shown once after 90 days of use and never
+  again. It says so on screen. The date of first use is kept in the widget's
+  own Plasma config; nothing is sent anywhere and the check is local.
+- `tools/package.sh`, which builds the `.plasmoid` archive the KDE Store
+  accepts, and a release workflow that attaches it to a GitHub release.
+- Ko-fi link in the README and a Sponsor button on the repository.
+
+### Fixed
+- Every bundled icon rendered as a black silhouette, because `Kirigami.Icon`
+  ignores its `color` when the source is a plain SVG file. On an unlit card
+  that measured 1.36:1 against the background, which is to say invisible.
+  Icons are now built at runtime with the fill baked in, and measure 5.7:1 or
+  better. A test checks this.
+
 ## [2.1.0] - 2026-10-27
 
 ### Changed

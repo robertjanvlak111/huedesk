@@ -1,0 +1,28 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  plasmoid:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install zip
+        run: sudo apt-get update && sudo apt-get install -y zip
+
+      # Also verifies Icons.js is in sync and the archive layout is correct.
+      - name: Build the .plasmoid archive
+        run: ./tools/package.sh dist
+
+      - name: Attach it to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.plasmoid
+          generate_release_notes: true

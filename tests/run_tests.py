@@ -105,6 +105,7 @@ def main() -> int:
 
         load_module(engine, CODE / "HueColors.js", suite.stem)
         load_module(engine, CODE / "HueModel.js", suite.stem)
+        load_module(engine, CODE / "Support.js", suite.stem)
 
         # The modules are plain function declarations; expose them under the
         # names the suites use.
@@ -112,6 +113,9 @@ def main() -> int:
             var HueColors = { xyToHex: xyToHex, mirekToHex: mirekToHex,
                               stateToHex: stateToHex, hexToXy: hexToXy };
             var HueModel = { buildModel: buildModel, splitBatch: splitBatch };
+            var Support = { todayIso: todayIso, daysBetween: daysBetween,
+                            shouldPrompt: shouldPrompt,
+                            DEFAULT_AFTER_DAYS: DEFAULT_AFTER_DAYS };
         """)
         engine.globalObject().setProperty(
             "FIXTURE", engine.evaluate("(" + FIXTURE.read_text() + ")"))
@@ -136,7 +140,8 @@ def main() -> int:
             else:
                 print(f"  ok    {case['name']}")
 
-    visual_failed = run_contrast_suite(patterns)
+    visual_failed = run_smoke_suite(patterns)
+    visual_failed = run_contrast_suite(patterns) or visual_failed
     visual_failed = run_drag_suite(patterns) or visual_failed
 
     print(f"\n{total - failed}/{total} unit assertions passed")
@@ -154,6 +159,28 @@ _CANNOT_RENDER = (
 
 def _is_environment_limit(output: str) -> bool:
     return any(marker in output for marker in _CANNOT_RENDER)
+
+
+def run_smoke_suite(patterns) -> bool:
+    """Instantiate every component; catches bindings the renderer never draws."""
+    if patterns and not any("smoke" in p or "visual" in p for p in patterns):
+        return False
+    print("\nsmoke")
+    proc = subprocess.run(
+        [sys.executable, str(ROOT / "tests" / "visual" / "smoke.py")],
+        capture_output=True, text=True)
+    for line in proc.stdout.splitlines():
+        if line.strip():
+            print(line)
+    if proc.returncode != 0:
+        combined = proc.stdout + proc.stderr
+        if _is_environment_limit(combined):
+            print("  skipped: this machine cannot render Plasma QML")
+            return False
+        if proc.stderr.strip():
+            print("  " + proc.stderr.strip().splitlines()[-1])
+        return True
+    return False
 
 
 def run_drag_suite(patterns) -> bool:
@@ -197,7 +224,7 @@ def run_contrast_suite(patterns) -> bool:
         return False
 
     sys.path.insert(0, str(ROOT / "tests"))
-    from visual.contrast import measure
+    from visual.contrast import measure, measure_icons
 
     render = ROOT / "tools" / "render.py"
     out_dir = ROOT / ".preview"
@@ -233,6 +260,21 @@ def run_contrast_suite(patterns) -> bool:
                 failed = True
         if worst >= 4.5:
             print(f"  ok    {theme}: worst label {worst:.2f}:1")
+
+        # Icons are checked on a plain layout, where their positions are fixed.
+        plain = out_dir / f"contrast-icons-{theme}.png"
+        proc = subprocess.run(
+            [sys.executable, str(render), "--theme", theme,
+             "--width", "400", "--height", "600", "--out", str(plain)],
+            capture_output=True, text=True)
+        if proc.returncode == 0 and plain.exists():
+            icon_worst, icon_rows = measure_icons(plain, quiet=True)
+            for label, r in icon_rows:
+                if r < 4.5:
+                    print(f"  FAIL  {theme}: {label} is {r:.2f}:1")
+                    failed = True
+            if icon_worst is not None and icon_worst >= 4.5:
+                print(f"  ok    {theme}: worst icon {icon_worst:.2f}:1")
     return failed
 
 
