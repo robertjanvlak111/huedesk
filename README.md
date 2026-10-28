@@ -94,6 +94,27 @@ If you miss the window, press it and choose Pair again.
 > "Hue Desk". If it is not listed at all, Plasma has not rescanned yet:
 > `kquitapp6 plasmashell && kstart plasmashell`
 
+### Installing from a downloaded file
+
+Releases also attach a `.plasmoid` file, which is the same thing the KDE Store
+serves. Note that double-clicking it does **not** work: Plasma registers the
+file type but ships no application that handles it, so your file manager will
+only offer to open it with something. Install it from a terminal:
+
+```bash
+kpackagetool6 --type Plasma/Applet --install com.rvlak.huedesk-<version>.plasmoid
+```
+
+To update a widget installed this way, use `--upgrade` instead; `--install`
+refuses when the widget is already present:
+
+```bash
+kpackagetool6 --type Plasma/Applet --upgrade com.rvlak.huedesk-<version>.plasmoid
+```
+
+Then restart the shell so Plasma picks up the new version:
+`kquitapp6 plasmashell && kstart plasmashell`
+
 ### Uninstall
 
 ```bash
