@@ -52,6 +52,14 @@ Item {
         make("SceneStrip", { hue: mock, theme: t, width: 380,
                              scenes: mock.scenes })
         make("TintedIcon", { name: "bulb", width: 24, height: 24 })
+
+        // Config pages. A broken one takes down the whole settings dialog,
+        // and none of them are reached by the renderer.
+        make("ConfigBridge", { width: 400 })
+        make("ConfigAppearance", { width: 400 })
+        make("ConfigContent", { width: 400 })
+        make("ConfigSupport", { width: 400 })
+
         done = true
     }
 }

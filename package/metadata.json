@@ -4,7 +4,7 @@
         "Description": "Control your Philips Hue lights from a widget on your desktop",
         "Icon": "icons/bulb.svg",
         "Id": "com.rvlak.huedesk",
-        "Version": "2.2.1",
+        "Version": "2.3.0",
         "Website": "https://github.com/robertjanvlak111/huedesk",
         "BugReportUrl": "https://github.com/robertjanvlak111/huedesk/issues",
         "Authors": [

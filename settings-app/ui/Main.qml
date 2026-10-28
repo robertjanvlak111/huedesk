@@ -335,6 +335,58 @@ ApplicationWindow {
                     }
                 }
 
+                // About -----------------------------------------------------
+                GroupBox {
+                    title: "About"
+                    Layout.fillWidth: true
+                    Layout.margins: 14
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        spacing: 10
+
+                        Label {
+                            Layout.fillWidth: true
+                            wrapMode: Text.WordWrap
+                            text: "Hue Desk is free and open source, and always "
+                                + "will be. If it has been useful, you can buy "
+                                + "me a coffee."
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+
+                            Button {
+                                text: "Buy me a coffee"
+                                onClicked: Qt.openUrlExternally(
+                                    "https://ko-fi.com/robertjanvlak")
+                            }
+                            Button {
+                                text: "Project page"
+                                onClicked: Qt.openUrlExternally(
+                                    "https://github.com/robertjanvlak111/huedesk")
+                            }
+                            Button {
+                                text: "Report a problem"
+                                onClicked: Qt.openUrlExternally(
+                                    "https://github.com/robertjanvlak111/huedesk/issues")
+                            }
+                            Item { Layout.fillWidth: true }
+                        }
+
+                        Label {
+                            Layout.fillWidth: true
+                            wrapMode: Text.WordWrap
+                            opacity: 0.7
+                            font.pixelSize: 11
+                            text: "The widget mentions this once, after about "
+                                + "three months of use, and never again. "
+                                + "Nothing is sent anywhere."
+                        }
+                    }
+                }
+
                 Item { Layout.preferredHeight: 8 }
             }
         }

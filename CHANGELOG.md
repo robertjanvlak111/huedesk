@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-10-28
+
+### Added
+- A Support page in the widget's settings, and an About section in the
+  settings app, both linking the project and Ko-fi. Plasma generates its own
+  About page from metadata.json and cannot be extended, so this sits beside it
+  rather than competing with it.
+- The smoke suite now covers the configuration pages as well, since a broken
+  one takes down the whole settings dialog.
+
 ## [2.2.1] - 2026-10-28
 
 ### Fixed

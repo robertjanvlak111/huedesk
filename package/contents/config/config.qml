@@ -17,4 +17,9 @@ ConfigModel {
         icon: "view-list-details"
         source: "ConfigContent.qml"
     }
+    ConfigCategory {
+        name: "Support"
+        icon: "help-donate"
+        source: "ConfigSupport.qml"
+    }
 }
