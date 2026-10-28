@@ -102,15 +102,20 @@ file type but ships no application that handles it, so your file manager will
 only offer to open it with something. Install it from a terminal:
 
 ```bash
-kpackagetool6 --type Plasma/Applet --install com.rvlak.huedesk-<version>.plasmoid
+cd ~/Downloads     # wherever the file actually is
+kpackagetool6 --type Plasma/Applet --install ./com.rvlak.huedesk-<version>.plasmoid
 ```
 
-To update a widget installed this way, use `--upgrade` instead; `--install`
-refuses when the widget is already present:
+To update a widget installed this way, use `--upgrade`; `--install` refuses
+when the widget is already present:
 
 ```bash
-kpackagetool6 --type Plasma/Applet --upgrade com.rvlak.huedesk-<version>.plasmoid
+kpackagetool6 --type Plasma/Applet --upgrade ./com.rvlak.huedesk-<version>.plasmoid
 ```
+
+> If you see `Error: Plugin  is not installed.`, the tool could not find the
+> file — it reports a missing *file* as a missing *plugin*. Check you are in
+> the directory holding it, or pass the full path.
 
 Then restart the shell so Plasma picks up the new version:
 `kquitapp6 plasmashell && kstart plasmashell`

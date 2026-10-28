@@ -62,6 +62,23 @@ becomes an icon with a pop-up.
 A room containing only smart plugs has nothing to dim. Plugs report
 `dimming: false`, so the card is on/off only. This is intentional.
 
+## `kpackagetool6` says "Plugin  is not installed"
+
+The message is misleading: it means the tool could not open the `.plasmoid`
+**file**, not that a plugin is missing. It reads the plugin name out of the
+archive, and with no archive to read it reports an empty name — hence the
+double space in the message.
+
+Almost always you are in a different directory from the file:
+
+```bash
+ls *.plasmoid                     # is it actually here?
+kpackagetool6 --type Plasma/Applet --upgrade "$PWD/com.rvlak.huedesk-2.3.0.plasmoid"
+```
+
+Use `--upgrade` when the widget is already installed and `--install` when it
+is not; `--install` refuses to overwrite an existing copy.
+
 ## Collecting diagnostics
 
 QML errors go to the journal, not the terminal:
