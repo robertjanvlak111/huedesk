@@ -9,7 +9,12 @@
 set -euo pipefail
 
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Resolved to an absolute path before anything changes directory: zip runs
+# from inside package/, so a relative output path would land in the wrong place.
 OUT_DIR="${1:-$SRC/dist}"
+mkdir -p "$OUT_DIR"
+OUT_DIR="$(cd "$OUT_DIR" && pwd)"
 
 command -v zip >/dev/null || { echo "Error: zip is not installed." >&2; exit 1; }
 
@@ -26,7 +31,6 @@ python3 "$SRC/tools/gen_icons.py" --check >/dev/null || {
     exit 1
 }
 
-mkdir -p "$OUT_DIR"
 ARCHIVE="$OUT_DIR/${ID}-${VERSION}.plasmoid"
 rm -f "$ARCHIVE"
 

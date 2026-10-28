@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.1] - 2026-10-28
+
+### Fixed
+- The release workflow could not build the archive: `tools/package.sh`
+  resolved its output directory after changing into `package/`, so the
+  relative path the workflow passes pointed at the wrong place. All three
+  invocation forms are now exercised.
+
 ## [2.2.0] - 2026-10-28
 
 ### Added
