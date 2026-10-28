@@ -26,8 +26,13 @@ listing.
 
 1. Sign in at <https://store.kde.org> (an OpenDesktop account).
 2. **Add Product**.
-3. Category: **Plasma 6 Applets**. Getting this wrong is the usual reason a
-   widget never shows up in *Get New Widgets*.
+3. Category: **Plasma 6 Applets** (store category 706).
+
+   *Get New Widgets* is configured by `/usr/share/knsrcfiles/plasmoids.knsrc`,
+   which queries **Plasma 6 Extensions** (705). That is an umbrella: it returns
+   everything listed under Applets, Clocks, Weather and the rest, so an item in
+   706 does appear there. Listing under an unrelated category is what makes a
+   widget invisible in the dialog.
 4. Upload `dist/com.rvlak.huedesk-<version>.plasmoid`.
 5. Fill in:
    - **Title**: Hue Desk
@@ -40,11 +45,26 @@ listing.
 6. Add screenshots from `screenshots/`. The first one is the thumbnail, so
    lead with `widget-dark.png`.
 
-### Updating later
+### How users get updates
 
-Upload the new `.plasmoid` to the **same** product and set the new version
-number. Plasma compares it against the installed `metadata.json`, so the two
-must agree.
+Upload the new `.plasmoid` to the **same** product page and raise the version
+number. That is the whole mechanism:
+
+- Plasma records which store item a widget came from when it is installed.
+- Next time the user opens *Add Widgets… → Get New Widgets…*, it compares the
+  store's version against theirs and offers an **Update** button.
+- Discover shows the same updates.
+
+Two rules, and nothing works without them:
+
+1. **Same product page, every time.** A new product is a new item; people who
+   installed the old one will never be offered it.
+2. **The version must go up**, and `metadata.json` must carry the same number
+   as the store listing. Plasma compares version strings, so 2.3.0 → 2.4.0
+   works and re-uploading 2.3.0 does nothing.
+
+People who installed with `git clone` and `install.sh` are not tracked by the
+store; they update with `git pull && ./install.sh`.
 
 ### What the store will not take
 
