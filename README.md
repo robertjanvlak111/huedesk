@@ -6,9 +6,8 @@
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-support-ff5e5b.svg)](https://ko-fi.com/robertjanvlak)
 
 A Philips Hue widget that lives on your KDE Plasma desktop, styled after the
-Hue app rather than a settings dialog. Rooms are brightness bars you drag,
-scenes sit in a carousel, and everything is always visible — no tray icon, no
-pop-up.
+Hue app. Rooms are brightness bars you drag,
+scenes sit in a carousel, and everything is always visible.
 
 ![Hue Desk in dark and light themes](screenshots/widget-dark.png)
 
